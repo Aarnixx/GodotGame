@@ -1,14 +1,23 @@
-// server.js
+const express = require("express");
+const app = express();
+const path = require("path");
 const WebSocket = require("ws");
 
-const wss = new WebSocket.Server({ port: process.env.PORT || 42069 });
+const server = app.listen(process.env.PORT || 3000, () => {
+  console.log("Server running...");
+});
+
+// Serve HTML5 Godot export
+app.use(express.static(path.join(__dirname, "public")));
+
+// Setup WebSocket server
+const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (ws) => {
   console.log("Client connected");
 
   ws.on("message", (message) => {
-    console.log(`Received: ${message}`);
-    // Broadcast to all clients
+    console.log(`Message: ${message}`);
     wss.clients.forEach((client) => {
       if (client !== ws && client.readyState === WebSocket.OPEN) {
         client.send(message);
@@ -16,9 +25,5 @@ wss.on("connection", (ws) => {
     });
   });
 
-  ws.on("close", () => {
-    console.log("Client disconnected");
-  });
+  ws.on("close", () => console.log("Client disconnected"));
 });
-
-console.log("WebSocket server started");
